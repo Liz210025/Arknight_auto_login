@@ -1,16 +1,19 @@
 name: Skland Auto Sign In
 
 on:
-  workflow_dispatch: # 允许手动点击运行
+  workflow_dispatch:
   schedule:
-    # 每天北京时间早上 5 点运行 (UTC 时间 21:00)
     - cron: "0 21 * * *"
-    # 每天北京时间下午 1 点运行 (UTC 时间 5:00)
     - cron: "0 5 * * *"
+
+permissions:
+  contents: write
+
 jobs:
   sign-in:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     env:
       SKLAND_TOKEN: ${{ secrets.SKLAND_TOKEN }}
       SKLAND_TOKENS: ${{ secrets.SKLAND_TOKENS }}
@@ -24,10 +27,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip' # 开启 pip 缓存加速运行
+          cache: 'pip'
 
       - name: 安装依赖
         run: pip install -r requirements.txt
 
       - name: 运行签到脚本
         run: python main.py
+
+      # 防止 GitHub Actions 因仓库 60 天无活动而停用
+      - name: Repository Keep Alive
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          echo "Keep alive: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" > .github-keepalive
+
+          git add .github-keepalive
+          git commit -m "chore: keep repository active [skip ci]"
+          git push
