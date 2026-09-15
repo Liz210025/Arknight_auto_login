@@ -31,3 +31,12 @@ jobs:
 
       - name: 运行签到脚本
         run: python main.py
+
+      - name: Keep repo active
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "$(date -u)" > .last-run
+          git add .last-run
+          git commit -m "chore: keep repo active [skip ci]" || exit 0
+          git push
