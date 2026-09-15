@@ -1,4 +1,3 @@
-```yaml
 name: Skland Auto Sign In
 
 on:
@@ -8,12 +7,10 @@ on:
     - cron: "0 21 * * *"
     # 每天北京时间下午 1 点运行 (UTC 时间 5:00)
     - cron: "0 5 * * *"
-
 jobs:
   sign-in:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     env:
       SKLAND_TOKEN: ${{ secrets.SKLAND_TOKEN }}
       SKLAND_TOKENS: ${{ secrets.SKLAND_TOKENS }}
@@ -43,45 +40,5 @@ jobs:
           git add .last-run
           git commit -m "chore: keep repo active [skip ci]" || exit 0
           git push
-
-      - name: Webhook 通知
-        if: always()
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            STATUS="success"
-            TITLE="森空岛签到成功"
-            MESSAGE="森空岛自动签到任务执行成功"
-          else
-            STATUS="failure"
-            TITLE="森空岛签到失败"
-            MESSAGE="森空岛自动签到任务执行失败，请检查 GitHub Actions 日志"
-          fi
-
-          jq -n \
-            --arg title "$TITLE" \
-            --arg message "$MESSAGE" \
-            --arg status "$STATUS" \
-            --arg repository "$GITHUB_REPOSITORY" \
-            --arg workflow "$GITHUB_WORKFLOW" \
-            --arg run_id "$GITHUB_RUN_ID" \
-            --arg run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
-            --arg event "$GITHUB_EVENT_NAME" \
-            --arg time "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-            '{
-              title: $title,
-              message: $message,
-              status: $status,
-              repository: $repository,
-              workflow: $workflow,
-              run_id: $run_id,
-              run_url: $run_url,
-              event: $event,
-              time: $time
-            }' |
-          curl \
-            -X POST \
-            -H "Content-Type: application/json" \
-            --data-binary @- \
-            "https://webhook.gsd2qa.workers.dev/" \
-            || echo "Webhook 发送失败"
-```
+          
+    
